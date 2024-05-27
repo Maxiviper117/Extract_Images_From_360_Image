@@ -1,0 +1,19 @@
+[project]
+name = "Convert360ToCubemap"
+version = "0.1.0"
+description = "Script to convert equirectangular 360 images to cubemap images"
+authors = ["Maxiviper117"]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[tasks]
+conv = 'python .\app\main.py'
+
+[dependencies]
+python = "3.11.*"
+
+[pypi-dependencies]
+py360convert = "*"
+opencv-python = "*"
+ipykernel = "*"
+matplotlib = "*"

@@ -1,8 +1,9 @@
 import os
 import py360convert
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import pathlib
+
 
 class CubemapConverter:
     def __init__(self, mode="bilinear", cube_format="dice"):
@@ -22,6 +23,15 @@ class CubemapConverter:
     def calculate_face_width(e_img):
         height, width = e_img.shape[:2]
         return height // 2
+
+    @staticmethod
+    def rotate_equirectangular(e_img, front_direction):
+        h, w = e_img.shape[:2]
+        # Calculate the number of pixels to shift based on the front direction in degrees
+        shift_pixels = int((front_direction / 360.0) * w)
+        # Roll the image horizontally
+        e_img = np.roll(e_img, shift_pixels, axis=1)
+        return e_img
 
     def save_cubemap_dice(self, cubemap_dice, output_dir, base_filename):
         # Create subdirectory for dice format
@@ -90,13 +100,16 @@ class CubemapConverter:
 
     def convert_and_save(self, input_img_path, output_dir, output_horizon_views=False,
                          output_list_views=False, output_faces=True, save_cube_dice=False,
-                         save_all=False, flip_faces=[], flip_list_faces=[]):
+                         save_all=False, flip_faces=[], flip_list_faces=[], front_direction=0):
         # Create the output directory if it does not exist
         os.makedirs(output_dir, exist_ok=True)
 
         # Load the equirectangular image
         image = Image.open(input_img_path)
         e_img = np.array(image)
+
+        # Rotate the equirectangular image to set the front direction
+        e_img = self.rotate_equirectangular(e_img, front_direction)
 
         # Calculate face width dynamically based on the original image size
         face_w = self.calculate_face_width(e_img)
@@ -143,7 +156,7 @@ class CubemapConverter:
 
     def convert_folder(self, input_dir, output_dir, output_horizon_views=False,
                        output_list_views=False, output_faces=True, save_cube_dice=False,
-                       save_all=False, flip_faces=[], flip_list_faces=[]):
+                       save_all=False, flip_faces=[], flip_list_faces=[], front_direction=0):
         # Check if input directory exists
         if not os.path.exists(input_dir):
             print(f"Directory '{input_dir}' not found. Please create a directory named 'imgs' in the root with 360 equirectangular images to process.")
@@ -156,8 +169,10 @@ class CubemapConverter:
                 self.convert_and_save(
                     input_img_path, output_dir, output_horizon_views,
                     output_list_views, output_faces, save_cube_dice, save_all,
-                    flip_faces=flip_faces, flip_list_faces=flip_list_faces
+                    flip_faces=flip_faces, flip_list_faces=flip_list_faces,
+                    front_direction=front_direction
                 )
+
 
 # Set current working directory
 cwd = pathlib.Path().absolute()
@@ -171,6 +186,7 @@ converter = CubemapConverter()
 
 # Convert images in the folder
 converter.convert_folder(
-    input_dir, output_dir, save_all=False, 
-    flip_faces=["B", "R"], flip_list_faces=[1, 2]
+    input_dir, output_dir, save_all=False,
+    flip_faces=["B", "R"], flip_list_faces=[1, 2],
+    front_direction=0  # Set the front direction in degrees 0-360
 )

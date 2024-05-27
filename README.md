@@ -68,7 +68,7 @@ pixi install
 
 # Usage
 
-First, create a `images` directory in the root of the project. Place all the 360° images in the `images` directory. (must be in equirectangular format)
+First, create a `imgs` directory in the root of the project. Place all the 360° images in the `images` directory. (must be in equirectangular format)
 
 To run the script, execute the following command in the terminal:
 

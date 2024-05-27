@@ -2,7 +2,7 @@ import os
 import py360convert
 import numpy as np
 from PIL import Image
-
+import pathlib
 
 class CubemapConverter:
     def __init__(self, mode="bilinear", cube_format="dice"):
@@ -144,6 +144,11 @@ class CubemapConverter:
     def convert_folder(self, input_dir, output_dir, output_horizon_views=False,
                        output_list_views=False, output_faces=True, save_cube_dice=False,
                        save_all=False, flip_faces=[], flip_list_faces=[]):
+        # Check if input directory exists
+        if not os.path.exists(input_dir):
+            print(f"Directory '{input_dir}' not found. Please create a directory named 'imgs' in the root with 360 equirectangular images to process.")
+            return
+
         # Iterate through all files in the input directory
         for filename in os.listdir(input_dir):
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -154,15 +159,17 @@ class CubemapConverter:
                     flip_faces=flip_faces, flip_list_faces=flip_list_faces
                 )
 
-
-import pathlib
-
+# Set current working directory
 cwd = pathlib.Path().absolute()
 
+# Define input and output directories
 input_dir = cwd.joinpath("imgs")
 output_dir = cwd.joinpath("out")
 
+# Create converter object
 converter = CubemapConverter()
+
+# Convert images in the folder
 converter.convert_folder(
     input_dir, output_dir, save_all=False, 
     flip_faces=["B", "R"], flip_list_faces=[1, 2]

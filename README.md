@@ -86,6 +86,9 @@ With faces named as:
 - `R_<orig_image_name>` - Right
 - `U_<orig_image_name>` - Up
 
+[![alt text](/assets/e2c.png)](https://github.com/sunset1995/py360convert)
+Src: https://github.com/sunset1995/py360convert
+
 Original image file name is appended to the face name. This allows for easy identification of the original image and can quickly remove specific faces in bulk.
 
 ![alt text](/assets/image.png)

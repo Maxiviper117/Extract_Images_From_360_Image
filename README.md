@@ -65,6 +65,14 @@ This will create a new directory named `Extract_Images_From_360_Image` containin
 
 Run the following command in the terminal to install the required dependencies:
 
+First navigate to the project directory:
+
+```bash
+cd Extract_Images_From_360_Image
+```
+
+Then run the following command:
+
 ```powershell
 pixi install
 ```
@@ -74,7 +82,7 @@ pixi install
 
 First, create a `imgs` directory in the root of the project. Place all the 360° images in the `images` directory. (must be in equirectangular format)
 
-To run the script, execute the following command in the terminal:
+To run the script, execute the following command in the terminal: (Make sure you are in the project directory)
 
 ```powershell
 pixi run conv

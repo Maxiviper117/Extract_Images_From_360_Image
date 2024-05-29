@@ -7,14 +7,15 @@ channels = ["conda-forge"]
 platforms = ["win-64"]
 
 [tasks]
-conv = 'python .\app\main.py'
+# conv = 'python .\app\main.py'
+streamlit-conv = 'streamlit run .\app\streamlit_app.py'
 
 [dependencies]
 python = "3.11.*"
-streamlit = ">=1.35.0,<1.36"
 
 [pypi-dependencies]
 py360convert = "*"
 opencv-python = "*"
 ipykernel = "*"
 matplotlib = "*"
+streamlit = "*"

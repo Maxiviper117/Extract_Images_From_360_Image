@@ -20,6 +20,10 @@ class CubemapConverter:
         return os.path.splitext(os.path.basename(filepath))[0]
 
     @staticmethod
+    def get_file_extension(filepath):
+        return os.path.splitext(filepath)[1]
+
+    @staticmethod
     def calculate_face_width(e_img):
         height, width = e_img.shape[:2]
         return height // 2
@@ -33,13 +37,13 @@ class CubemapConverter:
         e_img = np.roll(e_img, shift_pixels, axis=1)
         return e_img
 
-    def save_cubemap_dice(self, cubemap_dice, output_dir, base_filename):
+    def save_cubemap_dice(self, cubemap_dice, output_dir, base_filename, file_extension, front_direction):
         # Create subdirectory for dice format
         dice_dir = os.path.join(output_dir, "dice")
         os.makedirs(dice_dir, exist_ok=True)
 
         # Save the cubemap in 'dice' format
-        dice_img_path = os.path.join(dice_dir, f"cubemap_dice_{base_filename}.jpg")
+        dice_img_path = os.path.join(dice_dir, f"cubemap_dice_{front_direction}deg_{base_filename}{file_extension}")
         self.save_image(cubemap_dice, dice_img_path)
 
     def convert_e2c(self, e_img, face_w, output_horizon_views, output_list_views, output_faces, save_cube_dice):
@@ -65,42 +69,47 @@ class CubemapConverter:
 
         return cubemap_dice, cubemap_horizon, cubemap_dict, cubemap_list
 
-    def save_faces(self, cubemap_dict, output_dir, base_filename, flip_faces=[]):
+    def save_faces(self, cubemap_dict, output_dir, base_filename, file_extension, front_direction, flip_faces=[], keep_faces=None):
         # Create subdirectory for faces
         faces_dir = os.path.join(output_dir, "faces")
         os.makedirs(faces_dir, exist_ok=True)
 
         # Save each face in the 'dict' format
         for face, face_img in cubemap_dict.items():
+            if keep_faces and face not in keep_faces:
+                continue
             if face in flip_faces:
                 face_img = np.fliplr(face_img)  # Flip specified faces
-            face_img_path = os.path.join(faces_dir, f"{face}_face_{base_filename}.jpg")
+            face_img_path = os.path.join(faces_dir, f"{face}_face_{front_direction}deg_{base_filename}{file_extension}")
             self.save_image(face_img, face_img_path)
 
-    def save_horizon(self, cubemap_horizon, output_dir, base_filename):
+    def save_horizon(self, cubemap_horizon, output_dir, base_filename, file_extension, front_direction):
         # Create subdirectory for horizon format
         horizon_dir = os.path.join(output_dir, "horizon")
         os.makedirs(horizon_dir, exist_ok=True)
 
         # Save the 'horizon' format cubemap
-        horizon_img_path = os.path.join(horizon_dir, f"cubemap_horizon_{base_filename}.jpg")
+        horizon_img_path = os.path.join(horizon_dir, f"cubemap_horizon_{front_direction}deg_{base_filename}{file_extension}")
         self.save_image(cubemap_horizon, horizon_img_path)
 
-    def save_list_faces(self, cubemap_list, output_dir, base_filename, flip_list_faces=[]):
+    def save_list_faces(self, cubemap_list, output_dir, base_filename, file_extension, front_direction, flip_list_faces=[], keep_faces=None):
         # Create subdirectory for list faces
         list_faces_dir = os.path.join(output_dir, "list_faces")
         os.makedirs(list_faces_dir, exist_ok=True)
 
         # Save each face in the 'list' format
         for i, face_img in enumerate(cubemap_list):
+            if keep_faces and i not in keep_faces:
+                continue
             if i in flip_list_faces:
                 face_img = np.fliplr(face_img)  # Flip specified list faces
-            face_img_path = os.path.join(list_faces_dir, f"face_{i}_{base_filename}.jpg")
+            face_img_path = os.path.join(list_faces_dir, f"face_{i}_{front_direction}deg_{base_filename}{file_extension}")
             self.save_image(face_img, face_img_path)
 
     def convert_and_save(self, input_img_path, output_dir, output_horizon_views=False,
                          output_list_views=False, output_faces=True, save_cube_dice=False,
-                         save_all=False, flip_faces=[], flip_list_faces=[], front_direction=0):
+                         save_all=False, flip_faces=[], flip_list_faces=[], keep_faces=None,
+                         front_direction=0):
         # Create the output directory if it does not exist
         os.makedirs(output_dir, exist_ok=True)
 
@@ -114,8 +123,9 @@ class CubemapConverter:
         # Calculate face width dynamically based on the original image size
         face_w = self.calculate_face_width(e_img)
 
-        # Get the base filename
+        # Get the base filename and file extension
         base_filename = self.get_base_filename(input_img_path)
+        file_extension = self.get_file_extension(input_img_path)
 
         if save_all:
             output_horizon_views = True
@@ -130,19 +140,19 @@ class CubemapConverter:
 
         # Save cubemap dice image
         if save_cube_dice and cubemap_dice is not None:
-            self.save_cubemap_dice(cubemap_dice, output_dir, base_filename)
+            self.save_cubemap_dice(cubemap_dice, output_dir, base_filename, file_extension, (front_direction * -1))
 
         # Save faces
         if output_faces and cubemap_dict is not None:
-            self.save_faces(cubemap_dict, output_dir, base_filename, flip_faces=flip_faces)
+            self.save_faces(cubemap_dict, output_dir, base_filename, file_extension, (front_direction * -1), flip_faces=flip_faces, keep_faces=keep_faces)
 
         # Save horizon format
         if output_horizon_views and cubemap_horizon is not None:
-            self.save_horizon(cubemap_horizon, output_dir, base_filename)
+            self.save_horizon(cubemap_horizon, output_dir, base_filename, file_extension, (front_direction * -1))
 
         # Save list faces
         if output_list_views and cubemap_list is not None:
-            self.save_list_faces(cubemap_list, output_dir, base_filename, flip_list_faces=flip_list_faces)
+            self.save_list_faces(cubemap_list, output_dir, base_filename, file_extension, (front_direction * -1), flip_list_faces=flip_list_faces, keep_faces=keep_faces)
 
         # Print shapes for verification
         print("cubemap_dice.shape:", cubemap_dice.shape if cubemap_dice is not None else "Not created")
@@ -156,7 +166,11 @@ class CubemapConverter:
 
     def convert_folder(self, input_dir, output_dir, output_horizon_views=False,
                        output_list_views=False, output_faces=True, save_cube_dice=False,
-                       save_all=False, flip_faces=[], flip_list_faces=[], front_direction=0):
+                       save_all=False, flip_faces=[], flip_list_faces=[], keep_faces=None,
+                       front_direction=0):
+        
+        front_direction = front_direction * -1
+
         # Check if input directory exists
         if not os.path.exists(input_dir):
             print(f"Directory '{input_dir}' not found. Please create a directory named 'imgs' in the root with 360 equirectangular images to process.")
@@ -170,7 +184,7 @@ class CubemapConverter:
                     input_img_path, output_dir, output_horizon_views,
                     output_list_views, output_faces, save_cube_dice, save_all,
                     flip_faces=flip_faces, flip_list_faces=flip_list_faces,
-                    front_direction=front_direction
+                    keep_faces=keep_faces, front_direction=front_direction
                 )
 
 
@@ -188,5 +202,6 @@ converter = CubemapConverter()
 converter.convert_folder(
     input_dir, output_dir, save_all=False,
     flip_faces=["B", "R"], flip_list_faces=[1, 2],
-    front_direction=0  # Set the front direction in degrees 0-360
+    keep_faces=["F", "L", "R"],  # Specify faces to keep
+    front_direction=-45  # Set the front direction in degrees 0-360
 )
